@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "990077653726",
+    "project_id": "campuswave-3e97f",
+    "storage_bucket": "campuswave-3e97f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:990077653726:android:a13d33a2bc9a9c4bda284f",
+        "android_client_info": {
+          "package_name": "com.campuswave.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBLZYhjezMlE8xil-TjnvD7RRzlSZXfEcM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

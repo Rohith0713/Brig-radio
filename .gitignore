@@ -1,0 +1,29 @@
+# IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*.swo
+
+# Build and log files
+build/
+bin/
+obj/
+*.log
+build_err.txt
+build_result.txt
+
+# Android specific (if any)
+.gradle/
+local.properties
+captures/
+networkConfig/
+memory.prof
+
+# Backend specific (if any)
+__pycache__/
+*.pyc
+venv/
+.env
+backend/.env
+backend/serviceAccountKey.json
