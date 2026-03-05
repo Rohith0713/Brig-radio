@@ -1,9 +1,9 @@
 package com.campuswave.app.data.network
 
 object ApiConfig {
-    // AWS EC2 Production Server (Nginx → Gunicorn on port 80)
-    const val BASE_URL = "http://15.206.131.110/api/"
-    const val UPLOADS_URL = "http://15.206.131.110/uploads/"
+    // AWS EC2 Production Server
+    const val BASE_URL = "http://15.206.131.110:8000/api/"
+    const val UPLOADS_URL = "http://15.206.131.110:8000/uploads/"
 
     // Local Development (uncomment for local testing, comment out production above)
     // const val BASE_URL = "http://10.99.37.110:5000/api/"
