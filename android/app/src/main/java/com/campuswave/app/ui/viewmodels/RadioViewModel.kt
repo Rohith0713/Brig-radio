@@ -828,6 +828,44 @@ class RadioViewModel(private val context: Context) : ViewModel() {
         }
     }
     
+    fun joinRadio(radioId: Int) {
+        viewModelScope.launch {
+            try {
+                val token = authManager.getToken() ?: return@launch
+                val response = apiService.joinRadio("Bearer $token", radioId)
+                
+                // Update specific radio details if open
+                val currentDetailsResult = _radioDetails.value
+                if (currentDetailsResult is ApiResult.Success && currentDetailsResult.data.id == radioId) {
+                    _radioDetails.value = ApiResult.Success(
+                        currentDetailsResult.data.copy(participant_count = response.participant_count)
+                    )
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun leaveRadio(radioId: Int) {
+        viewModelScope.launch {
+            try {
+                val token = authManager.getToken() ?: return@launch
+                val response = apiService.leaveRadio("Bearer $token", radioId)
+                
+                // Update specific radio details if open
+                val currentDetailsResult = _radioDetails.value
+                if (currentDetailsResult is ApiResult.Success && currentDetailsResult.data.id == radioId) {
+                    _radioDetails.value = ApiResult.Success(
+                        currentDetailsResult.data.copy(participant_count = response.participant_count)
+                    )
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     fun deleteBanner(bannerId: Int) {
         viewModelScope.launch {
             try {

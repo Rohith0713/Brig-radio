@@ -53,6 +53,7 @@ fun RadioDetailsScreen(
     onDeleteClick: (Radio) -> Unit = {},
     onToggleReminder: (Radio) -> Unit = {},
     onHostClick: () -> Unit = {},
+    radioViewModel: com.campuswave.app.ui.viewmodels.RadioViewModel? = null,
     synchronizedTimeMillis: Long = System.currentTimeMillis()
 ) {
     val isAdmin = userRole == "ADMIN"
@@ -87,6 +88,7 @@ fun RadioDetailsScreen(
     // Connect to WebSocket for live radios (students only)
     LaunchedEffect(radio.id, radio.status, userRole) {
         if (radio.status == "LIVE" && !isAdmin) {
+            radioViewModel?.joinRadio(radio.id)
             signalingClient.connect(radio.id)
             
             // Collect events in separate coroutine to not block UI
@@ -107,6 +109,7 @@ fun RadioDetailsScreen(
                             android.util.Log.w("RadioDetails", "⛔ STOPPED by admin - ending session")
                             Toast.makeText(context, "Session ended by admin", Toast.LENGTH_SHORT).show()
                             AudioServiceManager.stop(context)
+                            radioViewModel?.leaveRadio(radio.id)
                             onBackClick()
                         }
                     }
@@ -115,10 +118,13 @@ fun RadioDetailsScreen(
         }
     }
     
-    // Cleanup WebSocket on screen exit
-    DisposableEffect(Unit) {
+    // Cleanup WebSocket and Leave Radio on screen exit
+    DisposableEffect(radio.id, radio.status) {
         onDispose {
             signalingClient.disconnect()
+            if (radio.status == "LIVE" && !isAdmin) {
+                radioViewModel?.leaveRadio(radio.id)
+            }
         }
     }
     
@@ -252,12 +258,11 @@ fun RadioDetailsScreen(
                     
                     if (!radio.media_url.isNullOrEmpty()) {
                         // For audio, show visual indicator only (actual playback in background service)
-                        // For video, use MediaPlayerComponent
+                        // For video, use RadioVideoPlayer
                         if (isVideo) {
                             val mediaUrl = UrlUtils.joinUrl(baseUrl, radio.media_url)
-                            com.campuswave.app.ui.components.MediaPlayerComponent(
+                            com.campuswave.app.ui.components.RadioVideoPlayer(
                                 mediaUrl = mediaUrl ?: "",
-                                isVideo = true,
                                 isPausedByHost = radio.host_status == "PAUSED" && !isPreRecorded
                             )
                         } else {
@@ -599,6 +604,7 @@ fun RadioDetailsScreen(
                                 Button(
                                     onClick = {
                                         AudioServiceManager.stop(context)
+                                        radioViewModel?.leaveRadio(radio.id)
                                         onBackClick()
                                     },
                                     modifier = Modifier.weight(1f).height(60.dp),

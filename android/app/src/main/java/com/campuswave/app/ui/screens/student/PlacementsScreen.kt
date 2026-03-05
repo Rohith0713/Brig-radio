@@ -77,17 +77,6 @@ fun PlacementsScreen(
                         IconButton(onClick = onNotificationClick) {
                             Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                                .clickable { onProfileClick() },
-                            contentAlignment = Alignment.Center
-                        ) {
-                             Icon(Icons.Default.Person, contentDescription = "Profile", tint = campusOnBackground())
-                        }
                     }
                 }
 

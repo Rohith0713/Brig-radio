@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.campuswave.app.data.models.Podcast
@@ -65,95 +66,48 @@ fun PodcastListScreen(
                 )
             )
         },
-        floatingActionButton = {
-            if (isAdmin) {
-                FloatingActionButton(
-                    onClick = onCreatePodcastClick,
-                    containerColor = PrimaryBlue,
-                    contentColor = Color.White,
-                    shape = CircleShape
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Schedule Podcast")
-                }
-            }
-        }
+        floatingActionButton = {}
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            if (isLoading && livePodcast == null && scheduledPodcasts.isEmpty()) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = PrimaryBlue
+            Column(
+                modifier = Modifier.fillMaxSize().padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Surface(
+                    modifier = Modifier.size(100.dp),
+                    shape = CircleShape,
+                    color = PrimaryBlue.copy(alpha = 0.1f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Default.Podcasts,
+                            contentDescription = null,
+                            tint = PrimaryBlue,
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Text(
+                    text = "Feature Coming Soon",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = onSurfaceColor,
+                    textAlign = TextAlign.Center
                 )
-            } else if (livePodcast == null && scheduledPodcasts.isEmpty()) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        Icons.Default.Podcasts,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = CampusGrey.copy(alpha = 0.5f)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        "No podcasts scheduled",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = CampusGrey
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Live Podcast Section
-                    if (livePodcast != null) {
-                        item {
-                            Text(
-                                "Live Now",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFFFF4444),
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-                            PodcastItem(
-                                podcast = livePodcast,
-                                isLive = true,
-                                isAdmin = isAdmin,
-                                onClick = { onPodcastClick(livePodcast.id) },
-                                onActionClick = { onPodcastClick(livePodcast.id) } // Join or Manage
-                            )
-                        }
-                    }
-
-                    // Scheduled Podcasts Section
-                    if (scheduledPodcasts.isNotEmpty()) {
-                        item {
-                            Text(
-                                "Upcoming",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = onSurfaceColor,
-                                modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
-                            )
-                        }
-                        items(scheduledPodcasts) { podcast ->
-                            PodcastItem(
-                                podcast = podcast,
-                                isLive = false,
-                                isAdmin = isAdmin,
-                                onClick = { /* No-op for students, or show details */ },
-                                onActionClick = { 
-                                    if (isAdmin) onGoLiveClick(podcast.id) 
-                                }
-                            )
-                        }
-                    }
-                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    text = "The Podcasts feature is currently under development and will be available in a future update.",
+                    fontSize = 14.sp,
+                    color = CampusGrey,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp
+                )
             }
         }
     }

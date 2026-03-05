@@ -505,7 +505,18 @@ fun AppNavigation(
             LaunchedEffect(radioId) { userRole = AuthManager(context).getUserRole() }
             DisposableEffect(radioId) { radioViewModel.startRadioPolling(radioId); onDispose { radioViewModel.stopRadioPolling() } }
             when (val state = radioState) {
-                is ApiResult.Success -> RadioDetailsScreen(radio = state.data, userRole = userRole ?: "student", autoStart = autoStart, onBackClick = { navController.popBackStack() }, onEditClick = { navController.navigate(Screen.EditRadio.createRoute(it.id)) }, onDeleteClick = { radioViewModel.deleteRadio(it.id); navController.popBackStack() }, onHostClick = { navController.navigate(Screen.LiveHosting.createRoute(radioId)) }, onToggleReminder = { radioViewModel.toggleSubscription(it.id) }, synchronizedTimeMillis = synchronizedTime)
+                is ApiResult.Success -> RadioDetailsScreen(
+                    radio = state.data,
+                    userRole = userRole ?: "student",
+                    autoStart = autoStart,
+                    radioViewModel = radioViewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onEditClick = { navController.navigate(Screen.EditRadio.createRoute(it.id)) },
+                    onDeleteClick = { radioViewModel.deleteRadio(it.id); navController.popBackStack() },
+                    onHostClick = { navController.navigate(Screen.LiveHosting.createRoute(radioId)) },
+                    onToggleReminder = { radioViewModel.toggleSubscription(it.id) },
+                    synchronizedTimeMillis = synchronizedTime
+                )
                 else -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             }
         }

@@ -181,6 +181,18 @@ interface BRIG_RADIOApiService {
         @Path("id") radioId: Int
     ): SubscriptionToggleResponse
     
+    @POST("radios/{id}/join")
+    suspend fun joinRadio(
+        @Header("Authorization") token: String,
+        @Path("id") radioId: Int
+    ): ParticipantCountResponse
+    
+    @POST("radios/{id}/leave")
+    suspend fun leaveRadio(
+        @Header("Authorization") token: String,
+        @Path("id") radioId: Int
+    ): ParticipantCountResponse
+    
     @POST("radios/{id}/favorite")
     suspend fun addFavorite(
         @Header("Authorization") token: String,
@@ -659,6 +671,11 @@ data class RadiosResponse(
     val total: Int,
     val page: Int,
     val pages: Int
+)
+
+data class ParticipantCountResponse(
+    val message: String,
+    val participant_count: Int
 )
 
 data class MessageResponse(

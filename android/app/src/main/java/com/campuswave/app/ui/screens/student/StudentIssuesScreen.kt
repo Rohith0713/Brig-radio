@@ -48,8 +48,8 @@ fun StudentIssuesScreen(
     val error by viewModel.error.collectAsState()
     val successMessage by viewModel.successMessage.collectAsState()
     
+    val tabs = listOf("Report Issue", "My Issues")
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("My Issues", "Report Issue")
     
     // Form state
     var title by remember { mutableStateOf("") }
@@ -71,7 +71,7 @@ fun StudentIssuesScreen(
         if (successMessage != null) {
             title = ""
             description = ""
-            selectedTab = 0 // Switch to issues list
+            selectedTab = 1 // Switch to issues list
             viewModel.clearSuccessMessage()
         }
     }
@@ -145,7 +145,7 @@ fun StudentIssuesScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    imageVector = if (index == 0) Icons.Default.List else Icons.Default.Add,
+                                    imageVector = if (index == 0) Icons.Default.Add else Icons.Default.List,
                                     contentDescription = null,
                                     tint = if (isSelected) Color.White else secondaryText,
                                     modifier = Modifier.size(18.dp)
@@ -203,20 +203,7 @@ fun StudentIssuesScreen(
             
             // Content
             when (selectedTab) {
-                0 -> IssuesListTab(
-                    issues = issues,
-                    isLoading = isLoading,
-                    onIssueClick = onIssueClick,
-                    onDeleteClick = { issueId ->
-                        viewModel.deleteIssue(issueId)
-                    },
-                    onRefresh = { viewModel.loadMyIssues() },
-                    isDark = isDark,
-                    surfaceColor = surfaceColor,
-                    primaryText = primaryText,
-                    secondaryText = secondaryText
-                )
-                1 -> ReportIssueTab(
+                0 -> ReportIssueTab(
                     title = title,
                     onTitleChange = { title = it },
                     description = description,
@@ -225,6 +212,19 @@ fun StudentIssuesScreen(
                     onSubmit = {
                         viewModel.createIssue(title, description)
                     },
+                    isDark = isDark,
+                    surfaceColor = surfaceColor,
+                    primaryText = primaryText,
+                    secondaryText = secondaryText
+                )
+                1 -> IssuesListTab(
+                    issues = issues,
+                    isLoading = isLoading,
+                    onIssueClick = onIssueClick,
+                    onDeleteClick = { issueId ->
+                        viewModel.deleteIssue(issueId)
+                    },
+                    onRefresh = { viewModel.loadMyIssues() },
                     isDark = isDark,
                     surfaceColor = surfaceColor,
                     primaryText = primaryText,
@@ -524,14 +524,14 @@ private fun ReportIssueTab(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = "Report College-Related Issues",
+                        text = "Report App-Related Issues",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         color = primaryText
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Submit any issues you're facing. An admin will review and respond through the chat system.",
+                        text = "Report any issues, bugs, improvements, or feature suggestions in the app to help us improve the overall experience.",
                         fontSize = 13.sp,
                         color = secondaryText,
                         lineHeight = 18.sp

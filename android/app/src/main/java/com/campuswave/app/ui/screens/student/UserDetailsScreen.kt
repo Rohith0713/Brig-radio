@@ -58,6 +58,7 @@ fun UserDetailsScreen(
     val viewModel = remember { ProfileViewModel(context) }
     val profileState by viewModel.userProfile.collectAsState()
     var showEditDialog by remember { mutableStateOf(false) }
+    var showResetDialog by remember { mutableStateOf(false) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -198,7 +199,7 @@ fun UserDetailsScreen(
                         },
                         onEditProfileClick = { showEditDialog = true },
                         onLogoutClick = onLogoutClick,
-                        onResetPasswordClick = onResetPasswordClick
+                        onResetPasswordClick = { showResetDialog = true }
                     )
                     
                     if (showEditDialog) {
@@ -212,6 +213,16 @@ fun UserDetailsScreen(
                             onConfirm = { name, pin, department, year, branch ->
                                 viewModel.updateProfile(name, pin, department, year, branch)
                                 showEditDialog = false
+                            }
+                        )
+                    }
+
+                    if (showResetDialog) {
+                        ResetPasswordConfirmationDialog(
+                            onDismiss = { showResetDialog = false },
+                            onConfirm = {
+                                showResetDialog = false
+                                onResetPasswordClick()
                             }
                         )
                     }
@@ -673,7 +684,7 @@ fun InstitutionalSettingsSection(onResetPasswordClick: () -> Unit) {
                 SettingsOptionButton(
                     title = "Reset Password",
                     icon = Icons.Default.LockReset,
-                    onClick = onResetPasswordClick
+                    onClick = { onResetPasswordClick() }
                 )
                 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -757,3 +768,46 @@ fun ThemeOptionButton(
 }
 
 
+@Composable
+fun ResetPasswordConfirmationDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Reset Password?",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = if (LocalIsDarkTheme.current) Color.White else Color(0xFF1E293B)
+            )
+        },
+        text = {
+            Text(
+                text = "Are you sure you want to reset your password? You will need to verify your account and create a new password.",
+                fontSize = 16.sp,
+                color = if (LocalIsDarkTheme.current) Color.White.copy(alpha = 0.7f) else Color(0xFF64748B)
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Continue", fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    "Cancel",
+                    color = if (LocalIsDarkTheme.current) Color.White.copy(alpha = 0.6f) else Color(0xFF64748B)
+                )
+            }
+        },
+        containerColor = campusSurface(),
+        shape = RoundedCornerShape(24.dp)
+    )
+}

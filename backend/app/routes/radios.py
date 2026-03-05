@@ -46,6 +46,8 @@ def sync_radio_statuses():
             radio.status = RadioStatus.COMPLETED
             if radio.host_status != HostStatus.ENDED:
                 radio.host_status = HostStatus.ENDED
+                # Clear participants when radio ends
+                radio.participants = []
                 
             # Cleanup audio file if it was a temporary recording/stream
             if radio.media_url and radio.media_type == MediaType.AUDIO:
@@ -595,4 +597,47 @@ def get_stream_info(radio_id):
         'media_url': radio.media_url,
         'is_live': radio.status == RadioStatus.LIVE and radio.host_status == HostStatus.HOSTING,
         'is_paused': radio.host_status == HostStatus.PAUSED
+    }), 200
+
+@bp.route('/<int:radio_id>/join', methods=['POST'])
+@jwt_required()
+def join_radio(radio_id):
+    """Join a live radio session"""
+    user_id = int(get_jwt_identity())
+    radio = Radio.query.get(radio_id)
+    
+    if not radio:
+        return jsonify({'error': 'Radio session not found'}), 404
+        
+    if radio.status != RadioStatus.LIVE:
+        return jsonify({'error': 'Radio session is not live'}), 400
+        
+    user = User.query.get(user_id)
+    if user not in radio.participants:
+        radio.participants.append(user)
+        db.session.commit()
+        
+    return jsonify({
+        'message': 'Joined radio session',
+        'participant_count': radio.participant_count
+    }), 200
+
+@bp.route('/<int:radio_id>/leave', methods=['POST'])
+@jwt_required()
+def leave_radio(radio_id):
+    """Leave a radio session"""
+    user_id = int(get_jwt_identity())
+    radio = Radio.query.get(radio_id)
+    
+    if not radio:
+        return jsonify({'error': 'Radio session not found'}), 404
+        
+    user = User.query.get(user_id)
+    if user in radio.participants:
+        radio.participants.remove(user)
+        db.session.commit()
+        
+    return jsonify({
+        'message': 'Left radio session',
+        'participant_count': radio.participant_count
     }), 200
