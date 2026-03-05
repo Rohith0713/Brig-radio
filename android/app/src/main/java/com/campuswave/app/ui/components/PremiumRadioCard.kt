@@ -115,10 +115,7 @@ fun PremiumRadioCard(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text(
-                            statusInfo.statusIcon,
-                            fontSize = 12.sp
-                        )
+                        // Icon removed
                         Text(
                             statusInfo.statusLabel,
                             color = Color.White,

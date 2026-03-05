@@ -1,13 +1,13 @@
 package com.campuswave.app.data.network
 
 object ApiConfig {
-    // 1. FOR PHYSICAL DEVICE (Both laptop and phone must be on same Wi-Fi)
-    const val BASE_URL = "http://10.99.37.110:5000/api/"
-const val UPLOADS_URL = "http://10.99.37.110:5000/uploads/"
-    
-    // 2. FOR ANDROID EMULATOR (Uncomment these and comment the ones above if using Emulator)
-    // const val BASE_URL = "http://10.0.2.2:5000/api/"
-    // const val UPLOADS_URL = "http://10.0.2.2:5000/uploads/"
+    // AWS EC2 Production Server (Nginx → Gunicorn on port 80)
+    const val BASE_URL = "http://15.206.131.110/api/"
+    const val UPLOADS_URL = "http://15.206.131.110/uploads/"
+
+    // Local Development (uncomment for local testing, comment out production above)
+    // const val BASE_URL = "http://10.99.37.110:5000/api/"
+    // const val UPLOADS_URL = "http://10.99.37.110:5000/uploads/"
 
     // Agora Configuration
     const val AGORA_APP_ID = "5c987d3664cf418ea548a92bc73dff0b"

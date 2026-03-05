@@ -141,9 +141,13 @@ fun RadioDetailsScreen(
     
     LaunchedEffect(radio.host_status, radio.status) {
         if (radio.host_status == "ENDED" || radio.status == "COMPLETED" || radio.status == "MISSED") {
-            Toast.makeText(context, "Event ended by admin", Toast.LENGTH_SHORT).show()
-            AudioServiceManager.stop(context)
-            onBackClick()
+            // Only stop playback if it isn't an uploaded pre-recorded session that naturally plays to the end
+            val isPreRecorded = !radio.media_url.isNullOrEmpty() && radio.media_type != "VIDEO"
+            if (!isPreRecorded || radio.status == "MISSED") {
+                 Toast.makeText(context, "Event ended", Toast.LENGTH_SHORT).show()
+                 AudioServiceManager.stop(context)
+                 onBackClick()
+            }
         }
     }
 
@@ -165,7 +169,10 @@ fun RadioDetailsScreen(
     // Auto-start logic for deep links
     var hasAutoStarted by remember { mutableStateOf(false) }
     LaunchedEffect(radio, autoStart) {
-        if (autoStart && !hasAutoStarted && radio.status == "LIVE" && radio.host_status == "HOSTING" && !isAdmin) {
+         val isPreRecorded = !radio.media_url.isNullOrEmpty() && radio.media_type != "VIDEO"
+         val shouldAutoPlay = autoStart && !hasAutoStarted && radio.status == "LIVE" && !isAdmin && (radio.host_status == "HOSTING" || isPreRecorded)
+         
+        if (shouldAutoPlay) {
             val baseUrl = ApiConfig.BASE_URL.removeSuffix("/api/")
             val isVideo = radio.media_type == "VIDEO" || (radio.media_url?.endsWith(".mp4") == true)
             
@@ -237,7 +244,8 @@ fun RadioDetailsScreen(
                     .clip(RoundedCornerShape(20.dp))
                     .background(campusSurface())
             ) {
-                if (radio.status == "LIVE" && (radio.host_status == "HOSTING" || radio.host_status == "PAUSED")) {
+                val isPreRecorded = !radio.media_url.isNullOrEmpty() && radio.media_type != "VIDEO"
+                if (radio.status == "LIVE" && (radio.host_status == "HOSTING" || radio.host_status == "PAUSED" || isPreRecorded)) {
                     val baseUrl = ApiConfig.BASE_URL.removeSuffix("/api/")
                     val isVideo = radio.media_type == "VIDEO" || 
                                  (radio.media_url?.endsWith(".mp4") == true)
@@ -250,14 +258,14 @@ fun RadioDetailsScreen(
                             com.campuswave.app.ui.components.MediaPlayerComponent(
                                 mediaUrl = mediaUrl ?: "",
                                 isVideo = true,
-                                isPausedByHost = radio.host_status == "PAUSED"
+                                isPausedByHost = radio.host_status == "PAUSED" && !isPreRecorded
                             )
                         } else {
                             // Audio playback indicator
                             val errorMsg = (playbackState as? AudioPlaybackService.PlaybackState.Error)?.message
                             AudioPlaybackIndicator(
                                 radioTitle = radio.title,
-                                isPausedByHost = radio.host_status == "PAUSED",
+                                isPausedByHost = radio.host_status == "PAUSED" && !isPreRecorded,
                                 isActuallyPlaying = isPlaying,
                                 hasMediaFile = !radio.media_url.isNullOrEmpty(),
                                 errorMessage = errorMsg,
@@ -265,7 +273,8 @@ fun RadioDetailsScreen(
                             )
                         }
                         
-                        if (radio.host_status == "PAUSED") {
+                        // Show "Paused by admin" overlay if admin paused it manually
+                        if (radio.host_status == "PAUSED" && !isPreRecorded) {
                             Surface(
                                 modifier = Modifier.fillMaxSize(),
                                 color = Color.Black.copy(alpha = 0.7f)
@@ -296,7 +305,7 @@ fun RadioDetailsScreen(
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(
-                                imageVector = if (radio.status == "UPCOMING") Icons.Default.Schedule else Icons.Default.CheckCircle,
+                                imageVector = if (radio.status == "UPCOMING") Icons.Default.Schedule else Icons.Default.History,
                                 contentDescription = null, 
                                 tint = Color.White, 
                                 modifier = Modifier.size(48.dp)
@@ -392,7 +401,23 @@ fun RadioDetailsScreen(
                 }
                 
                 // Live Timer Display (Student side)
-                if (radio.status == "LIVE" && (radio.host_status == "HOSTING" || radio.host_status == "PAUSED")) {
+                val isPreRecorded = !radio.media_url.isNullOrEmpty() && radio.media_type != "VIDEO"
+                val shouldShowLiveTimer = radio.status == "LIVE" && (radio.host_status == "HOSTING" || radio.host_status == "PAUSED" || isPreRecorded)
+                
+                if (shouldShowLiveTimer) {
+                    // Start a real-time countdown relative to elapsed playback or server time
+                    val displayTime = remember(elapsedTime, isPlaying, radio.start_time, synchronizedTimeMillis) {
+                        if (isPreRecorded && radio.host_status == "NOT_STARTED") {
+                             try {
+                                 val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US)
+                                 inputFormat.timeZone = java.util.TimeZone.getDefault()
+                                 val cleanStart = radio.start_time.substringBefore(".")
+                                 val startTimeMillis = inputFormat.parse(cleanStart)?.time ?: synchronizedTimeMillis
+                                 maxOf(0L, (synchronizedTimeMillis - startTimeMillis) / 1000L)
+                             } catch (e: Exception) { elapsedTime }
+                        } else elapsedTime
+                    }
+                    
                     Surface(
                         color = PrimaryBlue.copy(alpha = 0.1f),
                         shape = RoundedCornerShape(12.dp),
@@ -405,13 +430,13 @@ fun RadioDetailsScreen(
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    text = formatTimer(elapsedTime),
+                                    text = formatTimer(displayTime),
                                     style = MaterialTheme.typography.headlineMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (radio.host_status == "HOSTING") Color(0xFFE53935) else campusGrey()
+                                    color = if (radio.host_status == "HOSTING" || isPreRecorded) Color(0xFFE53935) else campusGrey()
                                 )
                                 Text(
-                                    text = if (radio.host_status == "HOSTING") "LIVE DURATION" else "PAUSED",
+                                    text = if (radio.host_status == "HOSTING" || isPreRecorded) "LIVE DURATION" else "PAUSED",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = campusGrey(),
@@ -499,8 +524,9 @@ fun RadioDetailsScreen(
                         // Student controls during live
                         val baseUrl = ApiConfig.BASE_URL.removeSuffix("/api/")
                         val isVideo = radio.media_type == "VIDEO" || (radio.media_url?.endsWith(".mp4") == true)
+                        val isPreRecorded = !radio.media_url.isNullOrEmpty() && !isVideo
                         
-                        if (radio.host_status == "PAUSED") {
+                        if (radio.host_status == "PAUSED" && !isPreRecorded) {
                              // Admin has paused - student cannot override
                              Button(
                                 onClick = { 
@@ -514,7 +540,7 @@ fun RadioDetailsScreen(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text("PAUSED BY ADMIN", fontWeight = FontWeight.Bold, color = Color.White)
                             }
-                        } else if (radio.host_status == "HOSTING") {
+                        } else if (radio.host_status == "HOSTING" || isPreRecorded) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -627,7 +653,7 @@ fun RadioDetailsScreen(
                             shape = RoundedCornerShape(16.dp)
                         ) {
                             Icon(
-                                imageVector = if (radio.is_subscribed) Icons.Default.CheckCircle else Icons.Default.Notifications,
+                                imageVector = if (radio.is_subscribed) Icons.Default.NotificationsActive else Icons.Default.Notifications,
                                 contentDescription = null,
                                 tint = if (radio.is_subscribed) PrimaryBlue else Color.White
                             )

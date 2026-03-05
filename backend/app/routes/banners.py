@@ -1,29 +1,29 @@
 import os
 import uuid
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from werkzeug.utils import secure_filename
 from app.extensions import db
 from app.models.banner import Banner
-from app.middleware.auth import token_required, admin_required
+from app.middleware.auth import admin_required
 
 banners_bp = Blueprint('banners', __name__)
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
-UPLOAD_FOLDER = 'uploads/banners'
 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def ensure_upload_folder():
-    if not os.path.exists(UPLOAD_FOLDER):
-        os.makedirs(UPLOAD_FOLDER)
+def get_banners_upload_folder():
+    """Get absolute path to banners upload folder, creating it if needed."""
+    folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'banners')
+    os.makedirs(folder, exist_ok=True)
+    return folder
 
 @banners_bp.route('/banners', methods=['POST'])
-@token_required
 @admin_required
-def upload_banner(current_user):
-    ensure_upload_folder()
+def upload_banner():
+    upload_folder = get_banners_upload_folder()
     
     if 'banner' not in request.files:
         return jsonify({'error': 'No file part'}), 400
@@ -37,11 +37,11 @@ def upload_banner(current_user):
         filename = secure_filename(file.filename)
         # Unique filename to prevent overwrite
         unique_filename = f"{uuid.uuid4()}_{filename}"
-        file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
+        file_path = os.path.join(upload_folder, unique_filename)
         file.save(file_path)
         
-        # Store relative path or URL
-        image_url = f"uploads/banners/{unique_filename}"
+        # Store path relative to uploads root (served via /uploads/<path>)
+        image_url = f"/uploads/banners/{unique_filename}"
         
         new_banner = Banner(image_url=image_url)
         db.session.add(new_banner)
@@ -53,27 +53,29 @@ def upload_banner(current_user):
 
 @banners_bp.route('/banners', methods=['GET'])
 def get_banners():
-    # Public endpoint, but maybe we want to sort by latest?
     banners = Banner.query.order_by(Banner.created_at.desc()).all()
     return jsonify({'banners': [b.to_dict() for b in banners]}), 200
 
 @banners_bp.route('/banners/<int:banner_id>', methods=['DELETE'])
-@token_required
 @admin_required
-def delete_banner(current_user, banner_id):
+def delete_banner(banner_id):
     banner = Banner.query.get(banner_id)
     if not banner:
         return jsonify({'error': 'Banner not found'}), 404
         
-    # Delete file from filesystem
+    # Delete file from filesystem using absolute path
     try:
-        # Construct absolute path if needed, assuming image_url is relative to root
-        # If image_url is like "uploads/banners/...", we can use it directly if CWD is root
-        if os.path.exists(banner.image_url):
-            os.remove(banner.image_url)
+        if banner.image_url:
+            # image_url is like "/uploads/banners/filename.jpg"
+            relative = banner.image_url.lstrip('/')
+            # Strip "uploads/" prefix since UPLOAD_FOLDER already points to uploads/
+            if relative.startswith('uploads/'):
+                relative = relative[len('uploads/'):]
+            abs_path = os.path.join(current_app.config['UPLOAD_FOLDER'], relative)
+            if os.path.exists(abs_path):
+                os.remove(abs_path)
     except Exception as e:
-        print(f"Error deleting file: {e}")
-        # Continue to delete from DB even if file delete fails (orphaned file is better than broken UI)
+        current_app.logger.error(f"Error deleting banner file: {e}")
         
     db.session.delete(banner)
     db.session.commit()

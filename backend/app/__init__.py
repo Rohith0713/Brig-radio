@@ -1,5 +1,6 @@
-from flask import Flask
+from flask import Flask, request
 import os
+import logging
 from config import config
 from app.extensions import db, migrate, jwt, cors, mail
 
@@ -13,17 +14,50 @@ def create_app(config_name='development'):
     # Disable strict slashes globally
     app.url_map.strict_slashes = False
     
+    # ── Logging ──────────────────────────────────────────────
+    if config_name == 'production':
+        logging.basicConfig(level=logging.INFO)
+        app.logger.setLevel(logging.INFO)
+    else:
+        logging.basicConfig(level=logging.DEBUG)
+        app.logger.setLevel(logging.DEBUG)
+
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter(
+        '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
+    ))
+    app.logger.addHandler(handler)
+    
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
-    cors.init_app(app)
+    cors.init_app(app, resources={
+        r"/api/*": {
+            "origins": "*",
+            "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "supports_credentials": True
+        }
+    })
     mail.init_app(app)
     
     # Create upload folder if it doesn't exist
     upload_folder = app.config['UPLOAD_FOLDER']
     if not os.path.exists(upload_folder):
         os.makedirs(upload_folder)
+    
+    # ── Request / Response Logging ───────────────────────────
+    @app.after_request
+    def log_response(response):
+        app.logger.info(f'{request.method} {request.path} → {response.status_code}')
+        return response
+
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        app.logger.error(f'Unhandled exception: {e}', exc_info=True)
+        from flask import jsonify
+        return jsonify({'error': 'Internal server error'}), 500
     
     # Register blueprints
     from app.routes import auth, radios, suggestions, dashboard
@@ -48,12 +82,9 @@ def create_app(config_name='development'):
     app.register_blueprint(reports.reports_bp, url_prefix='/api/reports')
     app.register_blueprint(marquee.bp)
     
-    # Podcast feature
-    from app.routes import podcasts, placements, agora, hms
-    app.register_blueprint(podcasts.bp)
+    # Placements feature
+    from app.routes import placements
     app.register_blueprint(placements.bp)
-    app.register_blueprint(agora.bp)
-    app.register_blueprint(hms.bp)
     
     # Issues feature
     from app.routes import issues
@@ -73,4 +104,7 @@ def create_app(config_name='development'):
     from app.errors import handlers
     handlers.register_error_handlers(app)
     
+    app.logger.info(f'CampusWave app created with [{config_name}] config')
+    
     return app
+

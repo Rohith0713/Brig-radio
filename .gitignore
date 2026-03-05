@@ -12,6 +12,7 @@ obj/
 *.log
 build_err.txt
 build_result.txt
+crash.txt
 
 # Android specific (if any)
 .gradle/

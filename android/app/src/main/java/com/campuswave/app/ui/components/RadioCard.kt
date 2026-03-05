@@ -8,6 +8,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -121,11 +124,13 @@ fun RadioCard(
             ) {
                 // Location
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "📍",
-                        modifier = Modifier.padding(end = 4.dp),
-                        fontSize = 14.sp
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = CampusGrey
                     )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = radio.location ?: "Unknown Location",
                         style = MaterialTheme.typography.bodySmall,
@@ -144,11 +149,13 @@ fun RadioCard(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "👥",
-                            modifier = Modifier.padding(end = 4.dp),
-                            fontSize = 12.sp
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = PrimaryBlue
                         )
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "${radio.participant_count}",
                             style = MaterialTheme.typography.labelMedium,
@@ -165,7 +172,7 @@ fun RadioCard(
 @Composable
 fun StatusBadge(status: String) {
     val (backgroundColor, textColor, text) = when (status) {
-        "LIVE" -> Triple(StatusLive.copy(alpha = 0.1f), StatusLive, "● LIVE")
+        "LIVE" -> Triple(StatusLive.copy(alpha = 0.1f), StatusLive, "LIVE")
         "UPCOMING" -> Triple(StatusUpcoming.copy(alpha = 0.1f), StatusUpcoming, "UPCOMING")
         "MISSED" -> Triple(StatusMissed.copy(alpha = 0.1f), StatusMissed, "ENDED")
         else -> Triple(CampusGrey.copy(alpha = 0.1f), CampusGrey, status)

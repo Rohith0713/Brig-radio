@@ -107,6 +107,7 @@ class AudioPlaybackService : Service() {
             val mediaItem = MediaItem.fromUri(Uri.parse(mediaUrl))
             setMediaItem(mediaItem)
             volume = 1f  // Ensure max player volume for audible output
+            repeatMode = Player.REPEAT_MODE_ONE // Loop short media continuously
             playWhenReady = true
             prepare()
             

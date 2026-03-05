@@ -211,10 +211,10 @@ fun LiveHostingScreen(
                             }
                             Text(
                                 text = when (radio.host_status) {
-                                    "HOSTING" -> "🔴 LIVE"
-                                    "PAUSED" -> "⏸ PAUSED"
-                                    "ENDED" -> "✓ ENDED"
-                                    else -> "● READY"
+                                    "HOSTING" -> "LIVE"
+                                    "PAUSED" -> "PAUSED"
+                                    "ENDED" -> "ENDED"
+                                    else -> "READY"
                                 },
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,

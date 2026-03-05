@@ -169,7 +169,7 @@ fun PremiumUpcomingCard(
                     } else if (hasStarted) {
                         val statusColor = if (statusInfo.isLive) Color.Red else (if (isDark) Color.White else Color.Black)
                          Text(
-                            text = "${statusInfo.statusIcon} ${statusInfo.statusLabel}",
+                            text = statusInfo.statusLabel,
                             color = statusColor,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,

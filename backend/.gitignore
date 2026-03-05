@@ -15,6 +15,13 @@ instance/
 # Environment
 .env
 .env.local
+.env.production
+
+# Credentials
+firebase-credentials.json
+
+# Runtime artifacts
+email_log.txt
 
 # Database
 *.db

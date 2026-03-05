@@ -109,7 +109,6 @@ object DateUtils {
      */
     data class RadioStatusInfo(
         val statusLabel: String,         // "LIVE NOW", "Upcoming", "Ended"
-        val statusIcon: String,          // "🔴", "⏳", "✅"
         val timeInfo: String?,           // "Time left: 18 mins", "Starts in 25 mins", "Starts at 10:00 AM"
         val startTimeFormatted: String,  // "10:00 AM"
         val endTimeFormatted: String,    // "11:00 AM"
@@ -150,7 +149,6 @@ object DateUtils {
                         
                         RadioStatusInfo(
                             statusLabel = "Upcoming",
-                            statusIcon = "⏳",
                             timeInfo = "Starts in $timeString",
                             startTimeFormatted = startTimeFormatted,
                             endTimeFormatted = endTimeFormatted,
@@ -162,7 +160,6 @@ object DateUtils {
                     } else {
                         RadioStatusInfo(
                             statusLabel = "Upcoming",
-                            statusIcon = "⏳",
                             timeInfo = "Starts at $startTimeFormatted",
                             startTimeFormatted = startTimeFormatted,
                             endTimeFormatted = endTimeFormatted,
@@ -177,7 +174,6 @@ object DateUtils {
                     val timeLeftMins = (endTime - currentTime) / (1000 * 60)
                     RadioStatusInfo(
                         statusLabel = "LIVE NOW",
-                        statusIcon = "🔴",
                         timeInfo = if (timeLeftMins > 0) "Time left: $timeLeftMins mins" else "Ending shortly",
                         startTimeFormatted = startTimeFormatted,
                         endTimeFormatted = endTimeFormatted,
@@ -190,7 +186,6 @@ object DateUtils {
                 else -> {
                     RadioStatusInfo(
                         statusLabel = "Ended",
-                        statusIcon = "✅",
                         timeInfo = null,
                         startTimeFormatted = startTimeFormatted,
                         endTimeFormatted = endTimeFormatted,
@@ -224,7 +219,6 @@ object DateUtils {
     private fun fallbackInfo(start: String, end: String): RadioStatusInfo {
         return RadioStatusInfo(
             statusLabel = "Scheduled",
-            statusIcon = "⏳",
             timeInfo = null,
             startTimeFormatted = start.substringAfter("T").take(5),
             endTimeFormatted = end.substringAfter("T").take(5),

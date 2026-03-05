@@ -179,6 +179,7 @@ fun CreateRadioScreen(
                             )
                         )
                     )
+                    .statusBarsPadding()
             ) {
                 Row(
                     modifier = Modifier

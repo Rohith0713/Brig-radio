@@ -8,7 +8,8 @@ load_dotenv()
 class Config:
     """Base configuration"""
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
-    
+
+    # Database
     SQLALCHEMY_DATABASE_URI = (
         f"mysql+pymysql://{os.getenv('DB_USER')}:"
         f"{os.getenv('DB_PASSWORD')}@"
@@ -19,22 +20,29 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_pre_ping": True,
         "pool_recycle": 280,
+        "pool_size": 5,
+        "max_overflow": 10,
         "connect_args": {
-            # "ssl": {"ssl_mode": "REQUIRED"}, # Comment out SSL for local dev if needed, or keep if using Azure/AWS
             "connect_timeout": 10
         }
     }
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    
+
     # JWT Configuration
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'jwt-secret-key-change-in-production'
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)
-    
+
     # File Upload Configuration
+    # Use UPLOAD_FOLDER from env if set (absolute path on server),
+    # otherwise default to <project_root>/uploads
     basedir = os.path.abspath(os.path.dirname(__file__))
-    UPLOAD_FOLDER = os.path.join(basedir, 'uploads')  # Fixed: uploads is at backend/uploads, not backend/app/uploads
-    MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH', 200 * 1024 * 1024))  # 200MB for videos
+    _upload_env = os.environ.get('UPLOAD_FOLDER')
+    if _upload_env:
+        UPLOAD_FOLDER = _upload_env if os.path.isabs(_upload_env) else os.path.join(basedir, _upload_env)
+    else:
+        UPLOAD_FOLDER = os.path.join(basedir, 'uploads')
+    MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH', 200 * 1024 * 1024))
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp3', 'mp4', 'wav', 'webm', 'mov', 'avi'}
 
     # Flask-Mail Configuration
@@ -49,17 +57,18 @@ class Config:
 class DevelopmentConfig(Config):
     """Development configuration"""
     DEBUG = True
-    FLASK_ENV = 'development'
 
 class ProductionConfig(Config):
     """Production configuration"""
     DEBUG = False
-    FLASK_ENV = 'production'
+
+    # Stricter pool settings for production with gunicorn workers
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_pre_ping": True,
         "pool_recycle": 280,
+        "pool_size": 3,       # Lower per-worker pool (gunicorn forks multiple workers)
+        "max_overflow": 5,
         "connect_args": {
-            "ssl": {"ssl_mode": "REQUIRED"},
             "connect_timeout": 10
         }
     }

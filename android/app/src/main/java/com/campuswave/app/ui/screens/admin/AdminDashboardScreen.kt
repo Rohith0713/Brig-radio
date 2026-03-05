@@ -813,7 +813,7 @@ fun UpcomingPreviewCard(
             Column {
                 Text(text = radio.title, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 Text(
-                    text = "${radio.category?.name ?: "General"} • ${statusInfo.statusIcon} ${statusInfo.timeInfo ?: statusInfo.startTimeFormatted}",
+                    text = "${radio.category?.name ?: "General"} • ${statusInfo.timeInfo ?: statusInfo.startTimeFormatted}",
                     color = if (statusInfo.isLive) AccentPink else CampusGrey,
                     fontSize = 12.sp,
                     fontWeight = if (statusInfo.isLive) FontWeight.Bold else FontWeight.Normal

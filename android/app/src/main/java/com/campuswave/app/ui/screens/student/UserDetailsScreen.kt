@@ -156,13 +156,34 @@ fun UserDetailsScreen(
                         Icon(Icons.Default.CloudOff, contentDescription = null, tint = CampusGrey, modifier = Modifier.size(64.dp))
                         Spacer(modifier = Modifier.height(16.dp))
                         Text("Failed to sync profile", color = CampusGrey, fontWeight = FontWeight.Medium)
-                        Button(
-                            onClick = { viewModel.fetchUserProfile() },
-                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.padding(top = 16.dp)
-                        ) {
-                            Text("Retry Sync")
+                        
+                        // Show error message if available
+                        val errorMsg = (state as ApiResult.Error).message
+                        if (errorMsg.isNotBlank()) {
+                            Text(errorMsg, color = ErrorRed, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp))
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            // Retry Button
+                            Button(
+                                onClick = { viewModel.fetchUserProfile() },
+                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text("Retry Sync")
+                            }
+                            
+                            // Emergency Logout Button (Crucial for invalid tokens)
+                            OutlinedButton(
+                                onClick = onLogoutClick,
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = ErrorRed),
+                                border = BorderStroke(1.dp, ErrorRed),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text("Sign Out")
+                            }
                         }
                     }
                 }
@@ -182,7 +203,7 @@ fun UserDetailsScreen(
                     
                     if (showEditDialog) {
                         EditProfileDialog(
-                            currentName = user.name,
+                            currentName = user.name ?: "",
                             currentPin = user.college_pin,
                             currentDepartment = user.department,
                             currentYear = user.year,
@@ -254,8 +275,9 @@ fun UserProfileContent(
                                         }
                                     )
                                 } else {
+                                    val fallbackInitial = user.name?.takeIf { it.isNotBlank() }?.take(1)?.uppercase() ?: "U"
                                     Text(
-                                        text = user.name.take(1).uppercase(),
+                                        text = fallbackInitial,
                                         fontSize = 54.sp,
                                         fontWeight = FontWeight.ExtraBold,
                                         color = if (LocalIsDarkTheme.current) Color.White else Color(0xFF1E293B),
@@ -298,7 +320,7 @@ fun UserProfileContent(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = user.name,
+                        text = user.name ?: "Unknown User",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = if (LocalIsDarkTheme.current) Color.White else Color(0xFF1E293B)
@@ -379,7 +401,7 @@ fun UserProfileContent(
                     
                     Spacer(modifier = Modifier.height(2.dp))
                     
-                    PersonalDetailRow(icon = Icons.Default.Email, label = "Email Address", value = user.email)
+                    PersonalDetailRow(icon = Icons.Default.Email, label = "Email Address", value = user.email ?: "")
                     HorizontalDivider(color = campusDivider().copy(alpha = 0.5f))
                     PersonalDetailRow(icon = Icons.Default.Category, label = "Department", value = user.department ?: "Not Set")
                     HorizontalDivider(color = campusDivider().copy(alpha = 0.5f))

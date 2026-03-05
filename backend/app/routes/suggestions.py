@@ -130,7 +130,7 @@ def approve_suggestion(suggestion_id):
     # Notify student
     notification = Notification(
         user_id=suggestion.suggested_by,
-        title="Suggestion Accepted 🎉",
+        title="Suggestion Accepted",
         message=f"Your suggestion '{suggestion.radio_title}' has been reviewed and accepted by the admin. Thank you for your valuable feedback!",
         type="SUGGESTION_APPROVED",
         related_id=radio.id

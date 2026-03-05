@@ -62,13 +62,13 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     
     // ViewModel Compose
-    implementation(libs.androidx.lifecycle.viewmodel-compose)
-    implementation(libs.androidx.lifecycle.runtime-compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     
     // Retrofit for API calls
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
-    implementation(libs.okhttp.logging-interceptor)
+    implementation(libs.okhttp.logging.interceptor)
     
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
@@ -78,14 +78,14 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     
     // Coil for image loading
-    implementation(libs.coil-compose)
+    implementation(libs.coil.compose)
     
     // ExoPlayer for media playback
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
     
     // WorkManager for scheduling notifications
-    implementation(libs.androidx.work-runtime-ktx)
+    implementation(libs.androidx.work.runtime.ktx)
 
     // WebRTC and WebSocket
     implementation(libs.google.webrtc)

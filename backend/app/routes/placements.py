@@ -1,6 +1,6 @@
 import os
 import uuid
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 from app.extensions import db
@@ -11,15 +11,16 @@ from datetime import datetime
 bp = Blueprint('placements', __name__, url_prefix='/api/placements')
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
-UPLOAD_FOLDER = 'uploads/placements'
 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def ensure_upload_folder():
-    if not os.path.exists(UPLOAD_FOLDER):
-        os.makedirs(UPLOAD_FOLDER)
+def get_placements_upload_folder():
+    """Get absolute path to placements upload folder, creating it if needed."""
+    folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'placements')
+    os.makedirs(folder, exist_ok=True)
+    return folder
 
 @bp.route('', methods=['GET'])
 @jwt_required()
@@ -125,7 +126,7 @@ def apply_placement(id):
 @bp.route('/posters', methods=['POST'])
 @admin_required
 def upload_poster():
-    ensure_upload_folder()
+    upload_folder = get_placements_upload_folder()
     
     title = request.form.get('title')
     company = request.form.get('company')
@@ -145,10 +146,10 @@ def upload_poster():
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         unique_filename = f"{uuid.uuid4()}_{filename}"
-        file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
+        file_path = os.path.join(upload_folder, unique_filename)
         file.save(file_path)
         
-        poster_image = f"uploads/placements/{unique_filename}"
+        poster_image = f"/uploads/placements/{unique_filename}"
         
         new_poster = PlacementPoster(
             title=title,
@@ -192,12 +193,17 @@ def update_poster(id):
 def delete_poster(id):
     poster = PlacementPoster.query.get_or_404(id)
     
-    # Delete file
+    # Delete file using absolute path
     try:
-        if os.path.exists(poster.poster_image):
-            os.remove(poster.poster_image)
-    except:
-        pass
+        if poster.poster_image:
+            relative = poster.poster_image.lstrip('/')
+            if relative.startswith('uploads/'):
+                relative = relative[len('uploads/'):]
+            abs_path = os.path.join(current_app.config['UPLOAD_FOLDER'], relative)
+            if os.path.exists(abs_path):
+                os.remove(abs_path)
+    except Exception as e:
+        current_app.logger.error(f"Error deleting poster file: {e}")
         
     db.session.delete(poster)
     db.session.commit()

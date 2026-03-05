@@ -46,6 +46,7 @@ fun MediaPlayerComponent(
         ExoPlayer.Builder(context).build().apply {
             val mediaItem = MediaItem.fromUri(Uri.parse(mediaUrl))
             setMediaItem(mediaItem)
+            repeatMode = Player.REPEAT_MODE_ONE // Loop short media continuously
             playWhenReady = true
             prepare()
             addListener(object : Player.Listener {

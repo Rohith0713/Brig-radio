@@ -109,7 +109,7 @@ object NotificationHelper {
         showRadioReminder(
             context = context,
             radioId = radioId,
-            radioTitle = "⏰ $radioTitle",
+            radioTitle = radioTitle,
             message = "Radio session starts in 30 minutes! Get ready to join.",
             notificationType = NotificationType.THIRTY_MINUTES_BEFORE
         )
@@ -136,7 +136,7 @@ object NotificationHelper {
         showRadioReminder(
             context = context,
             radioId = radioId,
-            radioTitle = "⚡ $radioTitle",
+            radioTitle = radioTitle,
             message = timeMessage,
             notificationType = NotificationType.FIVE_MINUTES_BEFORE
         )
@@ -149,7 +149,7 @@ object NotificationHelper {
         showRadioReminder(
             context = context,
             radioId = radioId,
-            radioTitle = "⏳ $radioTitle",
+            radioTitle = radioTitle,
             message = "Starts in 2 minutes! Time to tune in.",
             notificationType = NotificationType.TWO_MINUTES_BEFORE
         )
@@ -162,7 +162,7 @@ object NotificationHelper {
         showRadioReminder(
             context = context,
             radioId = radioId,
-            radioTitle = "🔴 LIVE: $radioTitle",
+            radioTitle = "LIVE: $radioTitle",
             message = "The radio session is now live! Tap to join.",
             notificationType = NotificationType.RADIO_LIVE
         )

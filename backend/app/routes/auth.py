@@ -274,9 +274,7 @@ def resend_otp():
 def forgot_password():
     """Send OTP for password reset"""
     data = request.get_json()
-    print(f"[FORGOT-PASSWORD DEBUG] Raw data: {data}")
     if not data or not data.get('email'):
-        print(f"[FORGOT-PASSWORD DEBUG] FAIL: No data or no email field")
         return jsonify({'error': 'Email is required'}), 400
         
     email = data['email'].lower().strip()

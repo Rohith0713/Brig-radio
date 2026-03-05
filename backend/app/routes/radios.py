@@ -66,7 +66,7 @@ def sync_radio_statuses():
         try:
             db.session.commit()
         except Exception as e:
-            print(f"Error syncing radio statuses: {e}")
+            current_app.logger.error(f"Error syncing radio statuses: {e}")
             db.session.rollback()
 
 @bp.route('', methods=['GET'])
@@ -286,14 +286,17 @@ def delete_radio(radio_id):
     try:
         import os
         for file_attr in ['banner_image', 'media_url']:
-            file_path = getattr(radio, file_attr)
-            if file_path:
-                # Handle leading slash
-                relative_path = file_path.lstrip('/')
-                if os.path.exists(relative_path):
-                    os.remove(relative_path)
+            file_url = getattr(radio, file_attr)
+            if file_url:
+                # file_url is like "/uploads/filename.ext"
+                relative = file_url.lstrip('/')
+                if relative.startswith('uploads/'):
+                    relative = relative[len('uploads/'):]
+                abs_path = os.path.join(current_app.config['UPLOAD_FOLDER'], relative)
+                if os.path.exists(abs_path):
+                    os.remove(abs_path)
     except Exception as e:
-        print(f"Error deleting radio files: {e}")
+        current_app.logger.error(f"Error deleting radio files: {e}")
         
     db.session.delete(radio)
     db.session.commit()
@@ -559,14 +562,10 @@ def end_hosting(radio_id):
             
             if os.path.exists(file_path):
                 os.remove(file_path)
-                print(f"Deleted audio file: {file_path}")
                 # Clear the URL from DB since file is gone
                 radio.media_url = None
-            else:
-                 print(f"Audio file not found at: {file_path}")
-                 
         except Exception as e:
-            print(f"Error deleting audio file: {e}")
+            current_app.logger.error(f"Error deleting audio file: {e}")
     
     db.session.commit()
     

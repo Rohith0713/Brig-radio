@@ -63,7 +63,6 @@ class RadioViewModel(private val context: Context) : ViewModel() {
         val serverTimeMillis = com.campuswave.app.utils.DateUtils.parseIsoToMillis(serverTimeStr) ?: return
         val deviceTimeMillis = System.currentTimeMillis()
         serverTimeOffset = serverTimeMillis - deviceTimeMillis
-        android.util.Log.d("RadioViewModel", "Updated server time offset: $serverTimeOffset ms")
     }
     
     private val _liveRadios = MutableStateFlow<ApiResult<List<Radio>>?>(null)

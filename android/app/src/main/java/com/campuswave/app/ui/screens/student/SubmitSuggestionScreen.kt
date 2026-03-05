@@ -45,6 +45,7 @@ fun SubmitSuggestionScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(campusBackground())
+                    .statusBarsPadding()
             ) {
                 // Glassmorphism Header
                 Surface(

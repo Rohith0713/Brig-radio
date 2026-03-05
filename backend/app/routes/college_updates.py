@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
 from app.models.college_update import CollegeUpdate, CollegeUpdateLike, CollegeUpdateView
@@ -17,10 +17,7 @@ def create_update():
     try:
         user_id = int(get_jwt_identity())
         
-        # Diagnostic logs
-        print(f"DEBUG: Create Update requested by user {user_id}")
-        print(f"DEBUG: Files in request: {list(request.files.keys())}")
-        print(f"DEBUG: Form data: {list(request.form.keys())}")
+
 
         # Check for image or video file
         media_file = None
@@ -39,14 +36,13 @@ def create_update():
             media_type = 'VIDEO'
         
         if not media_file:
-            print("DEBUG: No media file found in request")
+
             return jsonify({'error': 'Image or Video is mandatory'}), 400
             
         if media_file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
         
-        print(f"DEBUG: Media filename: {media_file.filename}")
-        print(f"DEBUG: Media content type: {media_file.content_type}")
+
             
         if not allowed_file(media_file.filename):
             return jsonify({'error': 'Invalid file type'}), 400
@@ -61,7 +57,7 @@ def create_update():
         if not filename:
             return jsonify({'error': 'Failed to save media'}), 500
         
-        print(f"DEBUG: Saved file as: {filename}")
+
             
         # Create update record
         update = CollegeUpdate(
@@ -78,11 +74,11 @@ def create_update():
         try:
             send_topic_notification(
                 topic='students',
-                title='New College Update 🎓',
+                title='New College Update',
                 body='A new college event update has been posted. Tap to view.'
             )
         except Exception as e:
-            print(f"Failed to send notification: {e}")
+            current_app.logger.warning(f"Failed to send notification: {e}")
             # Don't fail the request if notification fails
             
         log_event('POST_CREATED', user_id=user_id, role='ADMIN', metadata={'update_id': update.id, 'media_type': media_type})
@@ -94,8 +90,7 @@ def create_update():
         
     except Exception as e:
         import traceback
-        print(f"ERROR in create_update: {str(e)}")
-        traceback.print_exc()
+        current_app.logger.error(f"ERROR in create_update: {str(e)}")
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 
 
@@ -131,13 +126,15 @@ def delete_update(update_id):
     try:
         if update.image_url:
             # image_url is like "/uploads/filename.jpg"
-            # We need to map it to the actual path
             import os
-            relative_path = update.image_url.lstrip('/')
-            if os.path.exists(relative_path):
-                os.remove(relative_path)
+            relative = update.image_url.lstrip('/')
+            if relative.startswith('uploads/'):
+                relative = relative[len('uploads/'):]
+            abs_path = os.path.join(current_app.config['UPLOAD_FOLDER'], relative)
+            if os.path.exists(abs_path):
+                os.remove(abs_path)
     except Exception as e:
-        print(f"Error deleting media file: {e}")
+        current_app.logger.error(f"Error deleting media file: {e}")
         
     db.session.delete(update)
     db.session.commit()

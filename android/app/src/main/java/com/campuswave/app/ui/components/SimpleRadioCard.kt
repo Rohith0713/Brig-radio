@@ -77,10 +77,7 @@ fun SimpleRadioCard(
                 val hasBanner = !radio.banner_image.isNullOrEmpty()
                 // Construct URL: baseUrl (without /api/) + banner_image path (which starts with /uploads/)
                 val imageUrl = if (hasBanner) {
-                    val url = UrlUtils.joinUrl(baseUrl, radio.banner_image)
-                    android.util.Log.d("SimpleRadioCard", "Banner URL for '${radio.title}': $url")
-                    android.util.Log.d("SimpleRadioCard", "baseUrl: $baseUrl, banner_image: ${radio.banner_image}")
-                    url
+                    UrlUtils.joinUrl(baseUrl, radio.banner_image)
                 } else null
                 
                 if (hasBanner && imageUrl != null) {

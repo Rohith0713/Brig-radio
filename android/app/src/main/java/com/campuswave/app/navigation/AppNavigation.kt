@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
@@ -45,6 +46,7 @@ import com.campuswave.app.utils.ApiResult
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavigation(
     navController: NavHostController,
@@ -289,11 +291,12 @@ fun AppNavigation(
         composable(Screen.UserDetails.route) {
             val resetRequestState by authViewModel.resetRequestState.collectAsState()
             var userEmail by remember { mutableStateOf("") }
+            val userRole by authManager.userRole.collectAsState(initial = "STUDENT")
             LaunchedEffect(Unit) { userEmail = authManager.userEmail.first() ?: "" }
             LaunchedEffect(resetRequestState) { if (resetRequestState is ApiResult.Success) { navController.navigate(Screen.OtpVerification.createRoute(userEmail, "profile_reset")); authViewModel.clearResetFlowStates() } }
             UserDetailsScreen(
                 userName = authManager.userName.collectAsState(initial = "Loading...").value ?: "Unknown", userEmail = userEmail, userId = userEmail,
-                userRole = authManager.getUserRole() ?: "STUDENT", onBackClick = { navController.popBackStack() },
+                userRole = userRole ?: "STUDENT", onBackClick = { navController.popBackStack() },
                 onLogoutClick = { AudioServiceManager.stop(context); coroutineScope.launch { authViewModel.logoutSync(); navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } } },
                 onResetPasswordClick = { authViewModel.startPasswordReset() }
             )

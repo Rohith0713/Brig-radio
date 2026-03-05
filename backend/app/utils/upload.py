@@ -7,8 +7,13 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
 
-def save_upload(file):
-    """Save uploaded file and return filename"""
+def save_upload(file, subfolder=None):
+    """Save uploaded file and return relative path (e.g. 'radios/banner_20260305.jpg').
+    
+    Args:
+        file: Werkzeug FileStorage object
+        subfolder: Optional subdirectory under UPLOAD_FOLDER (e.g. 'radios', 'banners', 'profiles')
+    """
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         
@@ -18,9 +23,17 @@ def save_upload(file):
         name, ext = os.path.splitext(filename)
         filename = f"{name}_{timestamp}{ext}"
         
-        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        # Build target directory, creating subfolder if needed
+        target_dir = current_app.config['UPLOAD_FOLDER']
+        if subfolder:
+            target_dir = os.path.join(target_dir, subfolder)
+            os.makedirs(target_dir, exist_ok=True)
+        
+        filepath = os.path.join(target_dir, filename)
         file.save(filepath)
-        return filename
+        
+        # Return path relative to UPLOAD_FOLDER for DB storage
+        return f"{subfolder}/{filename}" if subfolder else filename
     return None
 
 def delete_file(filename):
