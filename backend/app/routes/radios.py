@@ -284,26 +284,69 @@ def delete_radio(radio_id):
     if not radio:
         return jsonify({'error': 'Radio session not found'}), 404
     
-    # Delete associated files
     try:
+        # 1. Delete associated data from other tables
+        from app.models.radio_subscription import RadioSubscription
+        from app.models.favorite import Favorite
+        from app.models.comment import Comment
+        from app.models.report import Report
+        from app.models.review import Review
+        from app.models.notification import Notification
+
+        # Delete subscriptions
+        RadioSubscription.query.filter_by(radio_id=radio_id).delete()
+        
+        # Delete favorites
+        Favorite.query.filter_by(radio_id=radio_id).delete()
+        
+        # Delete comments
+        Comment.query.filter_by(radio_id=radio_id).delete()
+        
+        # Delete reports
+        Report.query.filter_by(session_id=radio_id).delete()
+        
+        # Delete reviews
+        Review.query.filter_by(radio_id=radio_id).delete()
+        
+        # Delete notifications related to this radio
+        Notification.query.filter(
+            db.and_(
+                Notification.related_id == radio_id,
+                Notification.type.in_(['RADIO_LIVE', 'SUGGESTION_APPROVED'])
+            )
+        ).delete()
+
+        # 2. Clear participants (many-to-many)
+        radio.participants = []
+
+        # 3. Delete associated files from filesystem
         import os
+        upload_folder = current_app.config.get('UPLOAD_FOLDER')
+        if not upload_folder:
+            upload_folder = os.path.join(current_app.root_path, 'static', 'uploads')
+
         for file_attr in ['banner_image', 'media_url']:
             file_url = getattr(radio, file_attr)
             if file_url:
-                # file_url is like "/uploads/filename.ext"
-                relative = file_url.lstrip('/')
-                if relative.startswith('uploads/'):
-                    relative = relative[len('uploads/'):]
-                abs_path = os.path.join(current_app.config['UPLOAD_FOLDER'], relative)
+                # Extract filename from URL (e.g., "/uploads/file.jpg" -> "file.jpg")
+                filename = file_url.split('/')[-1]
+                abs_path = os.path.join(upload_folder, filename)
                 if os.path.exists(abs_path):
-                    os.remove(abs_path)
-    except Exception as e:
-        current_app.logger.error(f"Error deleting radio files: {e}")
+                    try:
+                        os.remove(abs_path)
+                    except Exception as e:
+                        current_app.logger.error(f"Error removing file {abs_path}: {e}")
+
+        # 4. Delete the radio record
+        db.session.delete(radio)
+        db.session.commit()
         
-    db.session.delete(radio)
-    db.session.commit()
-    
-    return jsonify({'message': 'Radio session deleted successfully'}), 200
+        return jsonify({'message': 'Radio session and all associated data deleted successfully'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting radio {radio_id}: {e}")
+        return jsonify({'error': f'Failed to delete radio session: {str(e)}'}), 500
 
 @bp.route('/<int:radio_id>/upload-banner', methods=['POST'])
 @admin_required

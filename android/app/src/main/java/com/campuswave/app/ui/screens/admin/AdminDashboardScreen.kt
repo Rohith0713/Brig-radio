@@ -830,6 +830,7 @@ fun AdminRadiosTab(
     onRadioClick: (Int) -> Unit,
     onLikeClick: (Int) -> Unit = {},
     onHostRadioClick: (Int) -> Unit = {},
+    onDeleteClick: (Int) -> Unit = {},
     synchronizedTimeMillis: Long = System.currentTimeMillis()
 ) {
     LazyColumn(
@@ -850,6 +851,7 @@ fun AdminRadiosTab(
                 isLive = isLive,
                 onClick = { onHostRadioClick(radios[index].id) },
                 onHostClick = { onHostRadioClick(radios[index].id) },
+                onDeleteClick = { onDeleteClick(radios[index].id) },
                 synchronizedTimeMillis = synchronizedTimeMillis
             )
         }
@@ -862,6 +864,7 @@ fun AdminRadioCard(
     isLive: Boolean,
     onClick: () -> Unit,
     onHostClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {},
     synchronizedTimeMillis: Long = System.currentTimeMillis()
 ) {
     Surface(
@@ -917,8 +920,23 @@ fun AdminRadioCard(
                 }
             }
             
-            IconButton(onClick = onHostClick) {
-                Icon(Icons.Default.ArrowForwardIos, contentDescription = null, tint = CampusGrey, modifier = Modifier.size(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onDeleteClick) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = Color(0xFFEF4444), // Red color
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                IconButton(onClick = onHostClick) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowForwardIos,
+                        contentDescription = null,
+                        tint = CampusGrey,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
     }

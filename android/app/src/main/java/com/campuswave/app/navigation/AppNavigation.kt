@@ -341,9 +341,64 @@ fun AppNavigation(
         composable("admin_requests") { AdminRequestsScreen(viewModel = adminViewModel, onBackClick = { navController.popBackStack() }) }
         composable(Screen.PastRadios.route) {
             val missedRadios by radioViewModel.missedRadios.collectAsState()
+            var showDeleteDialog by remember { mutableStateOf(false) }
+            var radioToDelete by remember { mutableStateOf<Int?>(null) }
+            
             LaunchedEffect(Unit) { radioViewModel.fetchMissedRadios() }
-            Scaffold(topBar = { TopAppBar(title = { Text("Past Radio Sessions") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, contentDescription = "Back") } }) }) { padding ->
-                Box(modifier = Modifier.padding(padding)) { AdminRadiosTab(radios = (missedRadios as? ApiResult.Success)?.data ?: emptyList(), isLive = false, onRadioClick = { navController.navigate(Screen.RadioDetails.createRoute(it)) }, onLikeClick = { radioViewModel.toggleFavorite(it) }) }
+            
+            if (showDeleteDialog) {
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = { showDeleteDialog = false },
+                    title = { Text("Delete Radio Session?") },
+                    text = { Text("Are you sure you want to delete this radio session? This action cannot be undone.") },
+                    confirmButton = {
+                        androidx.compose.material3.TextButton(
+                            onClick = {
+                                radioToDelete?.let { id ->
+                                    radioViewModel.deleteRadio(id)
+                                }
+                                showDeleteDialog = false
+                            },
+                            colors = androidx.compose.material3.ButtonDefaults.textButtonColors(contentColor = androidx.compose.ui.graphics.Color(0xFFEF4444))
+                        ) {
+                            Text("Delete")
+                        }
+                    },
+                    dismissButton = {
+                        androidx.compose.material3.TextButton(onClick = { showDeleteDialog = false }) {
+                            Text("Cancel")
+                        }
+                    },
+                    containerColor = if (com.campuswave.app.ui.theme.LocalIsDarkTheme.current) androidx.compose.ui.graphics.Color(0xFF1E1E1E) else androidx.compose.ui.graphics.Color.White,
+                    titleContentColor = if (com.campuswave.app.ui.theme.LocalIsDarkTheme.current) androidx.compose.ui.graphics.Color.White else androidx.compose.ui.graphics.Color.Black,
+                    textContentColor = if (com.campuswave.app.ui.theme.LocalIsDarkTheme.current) androidx.compose.ui.graphics.Color.White.copy(alpha = 0.7f) else androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.7f)
+                )
+            }
+            
+            Scaffold(
+                topBar = { 
+                    TopAppBar(
+                        title = { Text("Past Radio Sessions") }, 
+                        navigationIcon = { 
+                            IconButton(onClick = { navController.popBackStack() }) { 
+                                Icon(Icons.Default.ArrowBack, contentDescription = "Back") 
+                            } 
+                        }
+                    ) 
+                }
+            ) { padding ->
+                Box(modifier = Modifier.padding(padding)) { 
+                    AdminRadiosTab(
+                        radios = (missedRadios as? ApiResult.Success)?.data ?: emptyList(), 
+                        isLive = false, 
+                        onRadioClick = { navController.navigate(Screen.RadioDetails.createRoute(it)) }, 
+                        onLikeClick = { radioViewModel.toggleFavorite(it) },
+                        onDeleteClick = { id ->
+                            radioToDelete = id
+                            showDeleteDialog = true
+                        }
+                    ) 
+                }
             }
         }
         composable(Screen.InviteAdmin.route) { InviteAdminScreen(onBackClick = { navController.popBackStack() }) }
